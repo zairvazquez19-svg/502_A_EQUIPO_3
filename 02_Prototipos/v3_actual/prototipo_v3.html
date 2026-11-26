@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Seguimiento de Tutorías · Prototipo v3</title>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=Bitter:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#17313b;--mut:#587079;--bg:#eef2f4;--pn:#fff;--ln:#d3dce1;--ac:#b5235a;--acs:#f9e3ec;--ok:#1f7a5a;--oks:#dff1ea;--wn:#9a5b00;--wns:#fbecd2;--er:#b3261e;--ers:#fbe1df;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--ink:#e6eef1;--mut:#9fb2ba;--bg:#10191d;--pn:#18262c;--ln:#2e444d;--ac:#f07aa6;--acs:#3a1a28;--ok:#6fd1a8;--oks:#173528;--wn:#f0b45a;--wns:#3a2a10;--er:#ff8a80;--ers:#3a1816}}
+:root[data-theme="dark"]{color-scheme:dark;--ink:#e6eef1;--mut:#9fb2ba;--bg:#10191d;--pn:#18262c;--ln:#2e444d;--ac:#f07aa6;--acs:#3a1a28;--ok:#6fd1a8;--oks:#173528;--wn:#f0b45a;--wns:#3a2a10;--er:#ff8a80;--ers:#3a1816}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Figtree,system-ui,sans-serif}
+h1,h2,h3{font-family:Bitter,Georgia,serif;margin:0}
+h3{margin:14px 0 6px;font-size:17px}h3:first-child{margin-top:0}
+header{background:var(--ink);color:var(--bg);padding:14px 20px}
+header h1{font-size:20px}header p{margin:2px 0 0;font-size:13px;opacity:.8}
+.warn{background:var(--wns);color:var(--wn);padding:8px 20px;font-size:13px;border-bottom:1px solid var(--ln)}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:end;padding:12px 20px;background:var(--pn);border-bottom:1px solid var(--ln)}
+label{display:flex;flex-direction:column;font-size:12px;color:var(--mut);gap:3px}
+select,input,textarea,button{font:inherit;color:var(--ink);background:var(--pn);border:1px solid var(--ln);border-radius:6px;padding:7px 9px}
+textarea{width:100%;font:12px/1.4 ui-monospace,monospace;min-height:150px}
+textarea.t{font:inherit;min-height:60px}
+button{cursor:pointer;background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600}
+button.g{background:transparent;color:var(--ac)}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+nav{display:flex;gap:4px;padding:10px 20px 0;flex-wrap:wrap}
+nav button{background:transparent;color:var(--mut);border:0;border-bottom:3px solid transparent;border-radius:0}
+nav button.on{color:var(--ink);border-color:var(--ac)}
+main{padding:16px 20px;max-width:1100px;margin:auto}
+.card{background:var(--pn);border:1px solid var(--ln);border-radius:8px;padding:14px;margin-bottom:14px}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--ln);vertical-align:top}
+th{font-size:12px;color:var(--mut);font-weight:600}
+tr.cl{cursor:pointer}tr.cl:hover{background:var(--bg)}
+.b{display:inline-block;padding:1px 8px;border-radius:99px;font-size:12px;font-weight:600;margin:1px 2px 1px 0}
+.b.r{background:var(--ers);color:var(--er)}.b.o{background:var(--oks);color:var(--ok)}.b.w{background:var(--wns);color:var(--wn)}.b.n{background:var(--bg);color:var(--mut)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin-top:10px}
+.kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.kp div{border:1px solid var(--ln);border-radius:8px;padding:10px}.kp b{font:700 24px Bitter,serif;display:block}
+.msg{padding:9px 12px;border-radius:6px;margin-top:10px;font-size:14px}.msg.e{background:var(--ers);color:var(--er)}.msg.k{background:var(--oks);color:var(--ok)}
+.mut{color:var(--mut);font-size:13px}
+.ap{font-size:13px;color:var(--mut);margin-top:4px}
+</style>
+</head>
+<body>
+<header><h1>Sistema de Seguimiento de Tutorías</h1><p>Prototipo v3 de la fase 1 · UTM · Campus OAX, PUE, VER · datos ficticios</p></header>
+<div class="warn">Prototipo demostrativo: «Ver como» no es autenticación y los datos se reinician al recargar. Fecha de prueba: 3 nov 2026. El periodo actual y el último concluido se calculan con esa fecha y el catálogo de periodos.</div>
+<div class="bar">
+<label>Ver como<select id="role" onchange="setRole()"><option value="est">Estudiante</option><option value="tut">Tutor</option><option value="cc" selected>Coordinación de campus</option><option value="cn">Coordinación nacional</option></select></label>
+<label id="ctxl">Usuario<select id="ctx" onchange="ctx=this.value;sel=role==='est'?ctx:null;ed=null;msg='';render()"></select></label>
+</div>
+<nav id="nav"></nav>
+<main id="app"></main>
+<script>
+/* ---------- Catálogo y fecha (supuesto B; RNF-08) ---------- */
+const T='2026-11-03',NOW=T+'T12:00';
+const PER={'2025-1':['2025-02-01','2025-07-31'],'2025-2':['2025-08-01','2026-01-31'],'2026-1':['2026-02-01','2026-07-31'],'2026-2':['2026-08-01','2027-01-31']};
+const P=Object.keys(PER);
+const CUR=P.find(p=>PER[p][0]<=T&&T<=PER[p][1]),LC=P[P.indexOf(CUR)-1],CONC=P.slice(0,P.indexOf(CUR)),START=PER[CUR][0];
+const ST=['ACTIVO','BAJA','EGRESADO'],CAMP=['OAX','PUE','VER'];
+const TUT={t1:['Lucía Herrera','OAX'],t2:['Raúl Mendoza','OAX'],t3:['Elena Vargas','PUE'],t4:['Marcos Ibarra','VER']};
+const A=(a,c,r)=>[a,c,r];
+
+/* ---------- Datos ficticios ---------- */
+let S=[
+{c:'OAX',m:'00260101',n:'Carla Jiménez Ríos',ing:'2025-1',st:'ACTIVO',t:'t2',h:{'2025-1':A(8.4,6,0),'2025-2':A(8.1,6,0),'2026-1':A(8.6,6,0)},s:[{d:'2026-09-15T10:00',r:'asistió',m:'Presencial',tm:'Plan de estudio',o:'Buen avance',a:'t2'}],a:[{x:'Entregar horario de estudio',lim:'2026-10-10',done:true,ev:'Horario entregado',on:'2026-10-08'}],f:'2026-11-20'},
+{c:'OAX',m:'00260102',n:'Gabriela Ramos Torres',ing:'2026-2',st:'ACTIVO',t:'t1',h:{},s:[],a:[],f:'2026-11-15'},
+{c:'OAX',m:'00260103',n:'Diego Morales Sánchez',ing:'2025-1',st:'ACTIVO',t:'t1',h:{'2025-1':A(6.8,6,2),'2025-2':A(7.4,6,1)},s:[],a:[],f:'2026-11-10'},
+{c:'OAX',m:'00260104',n:'Héctor López Medina',ing:'2025-2',st:'ACTIVO',t:'t2',h:{'2025-2':A(7.5,6,0),'2026-1':A(7.2,6,1)},s:[{d:'2026-09-20T09:00',r:'asistió',m:'Virtual',tm:'Seguimiento',o:'',a:'t2'}],a:[],f:'2026-10-20'},
+{c:'OAX',m:'00260106',n:'Paula Ortega Ruiz',ing:'2026-1',st:'ACTIVO',t:'t2',h:{},s:[{d:'2026-09-10T11:00',r:'no asistió',m:'Presencial',tm:'Primera sesión',o:'',a:'t2'},{d:'2026-10-08T11:00',r:'no asistió',m:'Presencial',tm:'Seguimiento',o:'',a:'t2'}],a:[],f:'2026-11-12'},
+{c:'OAX',m:'00260107',n:'Mario Gil Reyes',ing:'2025-1',st:'ACTIVO',t:'t2',h:{'2025-1':A(7.9,6,0),'2025-2':A(7.6,6,0)},s:[{d:'2026-09-25T12:00',r:'asistió',m:'Presencial',tm:'Revisión',o:'',a:'t2'}],a:[{x:'Asistir a asesoría de cálculo',lim:'2026-10-15',done:false},{x:'Entregar reporte de avance',lim:'2026-11-30',done:true,ev:'Reporte entregado antes de la fecha',on:'2026-11-01'}],f:'2026-11-18'},
+{c:'OAX',m:'00260120',n:'Sofía Cruz Pérez',ing:'2025-2',st:'ACTIVO',t:'t1',h:{'2025-2':A(7.1,6,0),'2026-1':A(6.4,6,3)},s:[],a:[],f:'2026-11-09'},
+{c:'OAX',m:'00250130',n:'Tomás Aguilar Vera',ing:'2025-1',st:'EGRESADO',t:null,h:{'2025-1':A(9,6,0),'2025-2':A(9.1,6,0)},s:[],a:[],f:null},
+{c:'PUE',m:'00250201',n:'Andrea Núñez Gómez',ing:'2025-1',st:'ACTIVO',t:'t3',h:{'2025-2':A(8.7,6,0),'2026-1':A(8.9,6,0)},s:[],a:[],f:'2026-11-22'},
+{c:'PUE',m:'00250202',n:'Jorge Castillo Ruiz',ing:'2025-1',st:'ACTIVO',t:'t3',h:{'2025-2':A(6.8,6,1),'2026-1':A(6.2,5,2)},s:[],a:[],f:null},
+{c:'PUE',m:'00260203',n:'Valeria Soto Mena',ing:'2026-1',st:'ACTIVO',t:null,h:{'2026-1':A(8,6,0)},s:[],a:[],f:null},
+{c:'VER',m:'00250301',n:'Iker Domínguez Paz',ing:'2025-1',st:'ACTIVO',t:'t4',h:{'2025-2':A(7.5,6,0),'2026-1':A(7.8,6,0)},s:[],a:[],f:'2026-11-25'},
+{c:'VER',m:'00250302',n:'Mónica Reyes Lara',ing:'2025-2',st:'ACTIVO',t:'t4',h:{'2025-2':A(7.2,6,0),'2026-1':A(6.9,6,1)},s:[],a:[],f:'2026-11-05'}];
+S.forEach(s=>{s.hist=s.t?[{t:s.t,ini:'2026-08-01',fin:null,mot:'Asignación inicial (carga de datos)',by:'Sistema'}]:[];s.a.forEach(a=>{a.au=s.t;a.ap=[]})});
+let LOG=[{t:'2026-11-03 09:00',w:'Sistema',c:'*',x:'Carga inicial de datos ficticios'}];
+const INIT=JSON.stringify(S);
+
+/* ---------- Estado de la interfaz ---------- */
+let role='cc',ctx='OAX',view=0,sel=null,msg='',ed=null,impE=null,impA=null,rp=CUR,rt='',rc='';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const act=s=>s.st==='ACTIVO';
+const F=m=>S.find(x=>x.m===m);
+const tn=k=>k&&TUT[k]?TUT[k][0]:'—';
+
+/* ---------- Reglas (RN-01 a RN-11) e indicadores (IND-01 a 04) ---------- */
+function ev(s){const r=[];let inc=false,na=false;const h=s.h[LC];
+ if(P.indexOf(s.ing)>P.indexOf(LC))na=true;else if(!h)inc=true;else{if(h[0]<7)r.push(`Promedio ${h[0]} en ${LC} (menor a 7)`);if(h[2]>=2)r.push(`${h[2]} materias reprobadas de ${h[1]} cursadas en ${LC}`);}
+ const ns=s.s.filter(x=>x.r==='no asistió'&&x.d>=START&&x.d<=NOW).length;if(ns>=2)r.push(`${ns} inasistencias a tutoría en ${CUR}`);
+ const av=s.a.filter(x=>!x.done&&x.lim<T).length;if(av)r.push(`${av} acuerdo(s) vencido(s) sin cumplir`);
+ return{r,inc,na,att:act(s)&&r.length>0}}
+const pAsg=s=>act(s)&&!s.t;
+const pProg=s=>act(s)&&!!s.t&&!s.s.some(x=>x.r==='programada'&&x.d>NOW)&&!(s.f&&s.f>=T);
+function ind(s){let pr=null;for(let i=CONC.length-1;i>0;i--)if(s.h[CONC[i]]&&s.h[CONC[i-1]]){pr=[CONC[i-1],CONC[i]];break}
+ const f=k=>{if(!pr)return'Sin información suficiente';const d=s.h[pr[1]][k]-s.h[pr[0]][k];return`${pr[0]} → ${pr[1]}: ${d>0?'+':''}${d.toFixed(k?0:1)}`};
+ const cel=s.s.filter(x=>x.d>=START&&x.d<=NOW&&(x.r==='asistió'||x.r==='no asistió'));const as=cel.filter(x=>x.r==='asistió').length;
+ const set=s.a.filter(x=>x.lim>=START&&x.lim<T);const dn=set.filter(x=>x.done).length;
+ return{pr,prom:f(0),rep:f(2),as:cel.length?`${as} de ${cel.length} sesiones`:'Sin sesiones celebradas',cu:set.length?`${dn} de ${set.length} vencidos`:'No aplica'}}
+
+/* ---------- Permisos ---------- */
+function vis(){if(role==='est')return S.filter(s=>s.m===ctx);if(role==='tut')return S.filter(s=>s.t===ctx&&act(s));if(role==='cc')return S.filter(s=>s.c===ctx);return S}
+function canSee(s){if(!s)return false;if(role==='est')return s.m===ctx;if(role==='tut')return s.t===ctx&&act(s);if(role==='cc')return s.c===ctx;return true}
+const canCorr=(s,x)=>(role==='tut'&&x.a===ctx&&s.t===ctx)||(role==='cc'&&s.c===ctx&&x.a!==s.t);
+const isTut=s=>role==='tut'&&s.t===ctx&&act(s);
+
+/* ---------- Bitácora (solo inserción) ---------- */
+function actor(){return role==='cc'?'Coord. '+ctx:role==='tut'?tn(ctx):role==='est'?'Estudiante '+ctx:'Coord. nacional'}
+function log(x,o={}){LOG.unshift({t:T+' '+new Date().toTimeString().slice(0,5),w:actor(),c:o.c||'*',x,orig:o.orig||'',antes:o.antes||'',desp:o.desp||'',mot:o.mot||''})}
+
+/* ---------- Acciones (devuelven '' si todo bien, o el mensaje de error) ---------- */
+function doAssign(s,n,m){m=(m||'').trim();if(role!=='cc'||s.c!==ctx)return'Solo la coordinación de la sede asigna tutores.';if(!act(s))return'Solo se asigna tutor a estudiantes activos.';
+ if(!n)return'No hay otro tutor disponible en esta sede.';if(n===s.t)return'Ese tutor ya es el tutor activo.';if(!m)return'El motivo es obligatorio.';
+ const prev=s.t,h=s.hist.find(x=>!x.fin);if(h)h.fin=T;s.hist.push({t:n,ini:T,fin:null,mot:m,by:actor()});s.t=n;
+ log(`${prev?'Cambio':'Asignación'} de tutor de ${s.n}`,{c:s.c,antes:prev?tn(prev):'sin tutor',desp:tn(n),mot:m});return''}
+function doSes(s,x){if(!isTut(s))return'Solo el tutor activo registra sesiones.';
+ if(!x.f||!x.h)return'Fecha y hora son obligatorias.';x.d=x.f+'T'+x.h;
+ if((x.r==='asistió'||x.r==='no asistió')&&x.d>NOW)return'No se registra asistencia de una sesión futura. Usa «programada».';
+ if(x.r==='programada'&&x.d<=NOW)return'Una sesión pasada no puede quedar como programada; registra «asistió» o «no asistió».';
+ const o={d:x.d,r:x.r,m:x.m,tm:x.tm,o:x.o,a:ctx};
+ if(x.r.startsWith('cancelada')){if(!x.af||!x.ah)return'La cancelación requiere fecha y hora del aviso.';if(!x.o.trim())return'Indica el motivo de la cancelación en observaciones.';o.av=x.af+'T'+x.ah;
+  if(x.r.endsWith('estudiante')&&o.av>=o.d)return'Aviso posterior al inicio: la cancelación se rechaza. Registra la sesión como «no asistió».'}
+ s.s.push(o);s.s.sort((a,b)=>a.d<b.d?-1:1);log(`Sesión «${x.r}» de ${s.n} (${o.d.replace('T',' ')})`,{c:s.c});return''}
+function doCorr(s,k,o,j){const x=s.s[k];if(!x||!canCorr(s,x))return'No tienes permiso para corregir este registro.';j=(j||'').trim();
+ if(role==='cc'&&!j)return'La justificación es obligatoria para corregir registros de tutores anteriores.';if(o===x.o)return'No hay cambios que guardar.';
+ const mot=role==='cc'?j:'Corrección propia del tutor';
+ log(`Corrección de sesión ${x.d.replace('T',' ')} de ${s.n}`,{c:s.c,orig:tn(x.a),antes:x.o||'(vacío)',desp:o||'(vacío)',mot});x.o=o;x.cor=mot;return''}
+function doAcu(s,x,lim){if(!isTut(s))return'Solo el tutor activo registra acuerdos.';if(!x.trim()||!lim)return'El acuerdo necesita descripción y fecha límite.';
+ s.a.push({x:x.trim(),lim,done:false,au:ctx,ap:[]});log(`Acuerdo registrado para ${s.n}: «${x.trim()}» (límite ${lim})`,{c:s.c});return''}
+function doCum(s,k,e){const a=s.a[k];if(!isTut(s))return'Solo el tutor activo confirma el cumplimiento.';if(!a||a.done)return'El acuerdo ya está cumplido.';
+ if(!(e||'').trim())return'La evidencia breve es obligatoria.';a.done=true;a.ev=e.trim();a.on=T;
+ log(`Cumplimiento confirmado: «${a.x}» de ${s.n}`,{c:s.c,antes:a.lim<T?'Vencido':'Pendiente',desp:'Cumplido '+T,mot:a.ev});return''}
+function doAp(s,k,tx){const a=s.a[k];if(role!=='est'||s.m!==ctx)return'Solo el estudiante aporta información a sus acuerdos.';if(!(tx||'').trim())return'Escribe tu aporte antes de enviarlo.';
+ a.ap.push({tx:tx.trim(),on:T});log(`Aporte del estudiante al acuerdo «${a.x}»`,{c:s.c,desp:tx.trim()});return''}
+function doF(s,f){if(!isTut(s))return'Solo el tutor activo fija la fecha de seguimiento.';const a=s.f;s.f=f||null;log(`Fecha de seguimiento de ${s.n}`,{c:s.c,antes:a||'sin fecha',desp:s.f||'sin fecha'});return''}
+
+/* ---------- Importación (RF-IMP-01 a 08) ---------- */
+const HE='campus,matricula,nombre_completo,correo_institucional,programa,periodo_ingreso,estado';
+const HA='campus,matricula,periodo,promedio,materias_cursadas,materias_reprobadas';
+const BAD=HE+'\nOAX,00260105,Ana Cruz López,ana.cruz@mixteca.edu.mx,Computación,2026-1,ACTIVO\nXXX,00260106,Beto Gil,beto@mixteca.edu.mx,Computación,2026-1,ACTIVO\nOAX,00260112,,mario.p@mixteca.edu.mx,Computación,2026-1,ACTIVO\nOAX,00260108,Luis Pérez,luis.perez#mixteca,Computación,2026-1,ACTIVO\nOAX,00260109,Rosa Díaz,rosa.diaz@mixteca.edu.mx,Computación,2027-1,ACTIVO\nOAX,00260105,Ana Cruz López,ana.cruz@mixteca.edu.mx,Computación,2026-1,ACTIVO\nOAX,00260110,Iván Soto,ivan.soto@mixteca.edu.mx,Computación,2026-1,SUSPENDIDO\nPUE,00260111,Eva Luna,eva.luna@mixteca.edu.mx,Computación,2026-1,ACTIVO\n';
+const OK=HE+'\nOAX,00260105,Ana Cruz López,ana.cruz@mixteca.edu.mx,Computación,2026-1,ACTIVO\nOAX,00260108,Luis Pérez,luis.perez@mixteca.edu.mx,Computación,2026-1,ACTIVO\nOAX,00260109,Rosa Díaz,rosa.diaz@mixteca.edu.mx,Computación,2026-1,ACTIVO\nOAX,00260110,Iván Soto,ivan.soto@mixteca.edu.mx,Computación,2026-1,ACTIVO\n';
+const BADA=HA+'\nOAX,00260105,2026-1,8.5,6,0\nOAX,00260108,2026-1,7,5,6,0\nOAX,00260109,2026-1,11,6,0\nOAX,00260110,2026-1,8,6.5,0\nOAX,00260110,2025-2,8,0,0\nOAX,00260109,2026-1,7,6,0\nOAX,00260108,2025-2,7,6,8\nOAX,00269999,2026-1,8,6,0\n';
+const OKA=HA+'\nOAX,00260105,2026-1,8.5,6,0\nOAX,00260108,2026-1,7.5,6,0\nOAX,00260109,2026-1,6.5,6,2\nOAX,00260110,2026-1,8,6,0\n';
+const cntE=c=>S.filter(s=>s.c===c).length;
+const cntA=c=>S.filter(s=>s.c===c).reduce((n,s)=>n+Object.keys(s.h).length,0);
+function lines(t){return String(t||'').split('\n').map(x=>x.replace(/\r$/,'')).filter(x=>x.trim())}
+function campusErr(E,f,cp,camp){if(cp&&!CAMP.includes(cp))E.push([f,'campus','Campus desconocido']);else if(cp&&cp!==camp)E.push([f,'campus','Campus de otra sede: solo se importa la propia']);}
+function validateStu(text,camp){const L=lines(text),E=[],seen={},rows=[];
+ if(L.length<2)return{E:[[1,'archivo','El archivo está vacío o no tiene filas']],rows};
+ if(L[0].trim()!==HE)E.push([1,'encabezado','Encabezados distintos a los acordados: '+HE]);
+ L.slice(1).forEach((l,i)=>{const f=i+2,c=l.split(',').map(x=>x.trim());if(c.length!==7)return E.push([f,'columnas','Se esperaban 7 columnas y hay '+c.length]);
+  const[cp,m,n,em,pg,pi,es]=c,nm=HE.split(',');c.forEach((v,k)=>{if(!v)E.push([f,nm[k],'Campo vacío'])});
+  campusErr(E,f,cp,camp);
+  if(em&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em))E.push([f,'correo_institucional','Correo inválido']);
+  if(pi&&!P.includes(pi))E.push([f,'periodo_ingreso',`Periodo fuera del catálogo (${P[0]} a ${P[P.length-1]})`]);
+  if(es&&!ST.includes(es))E.push([f,'estado','Estado fuera del catálogo (ACTIVO, BAJA, EGRESADO)']);
+  const k=cp+'|'+m;if(m){if(seen[k])E.push([f,'matricula','Duplicado dentro del archivo (fila '+seen[k]+')']);else seen[k]=f;if(S.some(s=>s.c===cp&&s.m===m))E.push([f,'matricula','El estudiante ya existe: no se sobrescribe']);}
+  rows.push({c:cp,m,n,em,prog:pg,ing:pi,st:es,t:null,h:{},s:[],a:[],f:null,hist:[]})});
+ return{E,rows}}
+function validateAnt(text,camp){const L=lines(text),E=[],seen={},rows=[];
+ if(L.length<2)return{E:[[1,'archivo','El archivo está vacío o no tiene filas']],rows};
+ if(L[0].trim()!==HA)E.push([1,'encabezado','Encabezados distintos a los acordados: '+HA]);
+ L.slice(1).forEach((l,i)=>{const f=i+2,c=l.split(',').map(x=>x.trim());
+  if(c.length!==6)return E.push([f,'columnas',`Se esperaban 6 columnas y hay ${c.length}. Si el promedio usa coma decimal, cámbiala por punto`]);
+  const[cp,m,pi,pr,cu,re]=c,nm=HA.split(',');c.forEach((v,k)=>{if(!v)E.push([f,nm[k],'Campo vacío'])});
+  campusErr(E,f,cp,camp);
+  if(pi&&!P.includes(pi))E.push([f,'periodo',`Periodo fuera del catálogo (${P[0]} a ${P[P.length-1]})`]);
+  if(pr){if(!/^\d+(\.\d+)?$/.test(pr))E.push([f,'promedio','Promedio no numérico (usa punto decimal)']);else if(+pr<0||+pr>10)E.push([f,'promedio','Promedio fuera de 0 a 10'])}
+  const ci=/^\d+$/.test(cu),ri=/^\d+$/.test(re);
+  if(cu&&!ci)E.push([f,'materias_cursadas','Debe ser un número entero']);else if(cu&&+cu<1)E.push([f,'materias_cursadas','Materias cursadas menor que 1']);
+  if(re&&!ri)E.push([f,'materias_reprobadas','Debe ser un número entero']);else if(re&&ci&&+cu>=1&&+re>+cu)E.push([f,'materias_reprobadas','Reprobadas fuera de 0..cursadas']);
+  if(m&&cp){const st=S.find(s=>s.c===cp&&s.m===m);if(!st)E.push([f,'matricula','Antecedente de estudiante inexistente (importa primero el archivo de estudiantes)']);else if(pi&&st.h[pi])E.push([f,'periodo','El antecedente ya existe: no se sobrescribe']);
+   const k=cp+'|'+m+'|'+pi;if(seen[k])E.push([f,'matricula','Duplicado dentro del archivo (fila '+seen[k]+')']);else seen[k]=f}
+  rows.push({c:cp,m,p:pi,v:A(+pr,+cu,+re)})});
+ return{E,rows}}
+function importStu(rows){S.push(...rows);log(`Importación de ${rows.length} estudiantes (una sola transacción)`,{c:ctx});}
+function importAnt(rows){rows.forEach(r=>{F(r.m).h[r.p]=r.v});log(`Importación de ${rows.length} antecedentes (una sola transacción)`,{c:ctx});}
+
+/* ---------- Interfaz ---------- */
+function badges(s){const e=ev(s);let h='';if(!act(s))return`<span class="b n">${s.st}</span>`;
+ h+=e.att?'<span class="b r">Requiere atención</span>':(e.inc||e.na?'':'<span class="b n">Sin motivos de atención</span>');
+ if(e.inc)h+='<span class="b w">Evaluación incompleta</span>';if(e.na)h+='<span class="b w">Evaluación académica aún no aplicable</span>';
+ if(pAsg(s))h+='<span class="b w">Pendiente de asignación</span>';if(pProg(s))h+='<span class="b w">Pendiente de programación</span>';return h}
+function setRole(){role=$('role').value;view=0;sel=null;msg='';ed=null;impE=impA=null;rt='';rc='';rp=CUR;ctxOpts();render()}
+function ctxOpts(){let o=[];if(role==='est')o=S.map(s=>[s.m,s.m+' · '+s.n]);
+ if(role==='tut')o=Object.entries(TUT).map(([k,v])=>[k,v[0]+' ('+v[1]+')']);
+ if(role==='cc')o=CAMP.map(c=>[c,'Campus '+c]);
+ $('ctxl').style.display=role==='cn'?'none':'';$('ctx').innerHTML=o.map(a=>`<option value="${a[0]}">${esc(a[1])}</option>`).join('');ctx=o.length?o[0][0]:null;
+ if(role==='est')sel=ctx}
+function tabs(){return{est:['Mi expediente'],tut:['Mis estudiantes'],cc:['Estudiantes','Importar CSV','Reportes','Bitácora'],cn:['Resumen nacional','Consulta individual','Bitácora']}[role].concat(['Verificación','Supuestos'])}
+function go(i){view=i;sel=role==='est'?ctx:null;msg='';ed=null;render()}
+function render(){const t=tabs();$('nav').innerHTML=t.map((x,i)=>`<button class="${i===view?'on':''}" onclick="go(${i})">${x}</button>`).join('');
+ const n=t[view];let h='';
+ if(n==='Mi expediente')h=exp(ctx);
+ else if(n==='Mis estudiantes'||n==='Estudiantes'||n==='Consulta individual')h=list()+(sel?exp(sel):'');
+ else if(n==='Importar CSV')h=impView();
+ else if(n==='Reportes'||n==='Resumen nacional')h=rep();
+ else if(n==='Bitácora')h=bit();
+ else if(n==='Verificación')h=verView();
+ else h=supView();
+ $('app').innerHTML=h}
+function pick(m){sel=m;ed=null;msg='';render();const e=$('exp');if(e)e.scrollIntoView()}
+function list(){const v=vis();let h='';
+ if(role==='tut')h+=`<div class="card"><div class="row" style="margin:0"><label>Abrir expediente por matrícula<input id="om" inputmode="numeric" placeholder="p. ej. 00260101"></label><button class="g" onclick="pick($('om').value.trim())">Abrir</button></div></div>`;
+ if(role==='tut'&&!v.length)return h+'<div class="card">No tienes estudiantes con asignación activa.</div>';
+ const wc=role==='cc'||role==='cn';
+ return h+`<div class="card tw"><table><tr><th>Matrícula</th><th>Estudiante</th>${wc?'<th>Campus</th>':''}<th>Tutor</th><th>Situación</th></tr>${v.map(s=>`<tr class="cl" onclick="pick('${s.m}')"><td>${s.m}</td><td>${esc(s.n)}</td>${wc?`<td>${s.c}</td>`:''}<td>${tn(s.t)}</td><td>${badges(s)}</td></tr>`).join('')}</table></div>`}
+function fm(){return msg?`<div class="msg ${msg[0]}" role="status">${esc(msg.slice(1))}</div>`:''}
+function exp(m){const s=F(m);
+ if(!canSee(s))return`<div class="card" id="exp"><h2>Sin acceso</h2><p>${role==='tut'?'No tienes asignación activa con este estudiante. Si eras su tutor, tus registros se conservan con tu autoría, pero ya no puedes consultarlos.':'No tienes permiso para consultar este expediente.'}</p></div>`;
+ const e=ev(s),i=ind(s),ro=role==='cn',est=role==='est',tut=isTut(s);
+ const mot=e.r.length?e.r.map(r=>`<li>${est?'Para apoyarte mejor, conviene platicar con tu tutor sobre: '+esc(r.charAt(0).toLowerCase()+r.slice(1)):esc(r)}</li>`).join(''):(act(s)&&!e.inc&&!e.na?'<li class="mut">No hay motivos de atención registrados con las reglas actuales.</li>':'');
+ const nota=e.inc?`<p class="mut">Falta el antecedente de ${LC}: no se evalúan promedio ni reprobadas y no se usa un periodo anterior. ${e.r.length?'':'Esto no significa «sin problemas».'}</p>`:e.na?`<p class="mut">Ingresó después de ${LC}: aún no hay periodo concluido que evaluar. Las reglas de inasistencia y acuerdos sí aplican.</p>`:'';
+ let h=`<div class="card" id="exp"><h2>${esc(s.n)}</h2><p class="mut">${s.c} · matrícula ${s.m} · ingreso ${s.ing} · tutor: ${s.t?tn(s.t):'sin tutor activo'}${ro?' · consulta solamente':''}</p><div>${badges(s)}</div><ul>${mot}</ul>${nota}
+ <h3>Indicadores</h3><div class="kp"><div><span class="mut">Evolución del promedio</span><b style="font-size:15px">${i.prom}</b></div><div><span class="mut">Evolución de reprobadas</span><b style="font-size:15px">${i.rep}</b></div><div><span class="mut">Asistencia (${CUR})</span><b style="font-size:15px">${i.as}</b></div><div><span class="mut">Cumplimiento de acuerdos (${CUR})</span><b style="font-size:15px">${i.cu}</b></div></div><p class="mut">Los indicadores muestran evolución; no prueban que la tutoría causó una mejora. El cumplimiento solo cuenta acuerdos ya vencidos. Próximo seguimiento: ${s.f||'sin fecha'}.</p></div>`;
+ h+=`<div class="card tw"><h3>Sesiones</h3><table><tr><th>Fecha y hora</th><th>Resultado</th><th>Modalidad</th><th>Tema / observaciones</th><th>Autor</th>${est||ro?'':'<th></th>'}</tr>${s.s.map((x,k)=>{const can=canCorr(s,x),lock=role==='cc'&&x.a===s.t;
+  return`<tr><td>${x.d.replace('T',' ')}</td><td>${x.r}${x.av?'<br><span class="mut">aviso '+x.av.replace('T',' ')+'</span>':''}</td><td>${x.m}</td><td>${esc(x.tm)}${x.o?' · '+esc(x.o):''}${x.cor?'<br><span class="mut">Corregido: '+esc(x.cor)+'</span>':''}</td><td>${tn(x.a)}</td>${est||ro?'':`<td>${can?`<button class="g" onclick="ed={k:'corr',i:${k}};msg='';render()">Corregir</button>`:lock?'<span class="mut">Bloqueado: registro del tutor actual</span>':''}</td>`}</tr>`}).join('')||'<tr><td colspan="6" class="mut">Sin sesiones.</td></tr>'}</table>`;
+ if(ed&&ed.k==='corr'&&s.s[ed.i]){const x=s.s[ed.i];h+=`<div class="card" style="margin:10px 0 0"><b>Corregir observaciones de la sesión ${x.d.replace('T',' ')}</b> <span class="mut">(autor original: ${tn(x.a)})</span><div class="row"><label style="flex:1">Nuevas observaciones<textarea class="t" id="co">${esc(x.o)}</textarea></label></div>${role==='cc'?'<div class="row"><label style="flex:1">Justificación (obligatoria)<input id="cj"></label></div>':''}<div class="row"><button onclick="uCorr()">Guardar corrección</button><button class="g" onclick="ed=null;render()">Cancelar</button></div></div>`}
+ h+=`</div><div class="card tw"><h3>Acuerdos</h3><table><tr><th>Acuerdo</th><th>Fecha límite</th><th>Estado</th><th></th></tr>${s.a.map((x,k)=>`<tr><td>${esc(x.x)}${x.ap&&x.ap.length?x.ap.map(a=>`<div class="ap">Aporte del estudiante (${a.on}): ${esc(a.tx)}</div>`).join(''):''}</td><td>${x.lim}</td><td>${x.done?`<span class="b o">Cumplido ${x.on}</span> ${esc(x.ev)}`:x.lim<T?'<span class="b r">Vencido</span>':'<span class="b w">Pendiente</span>'}</td><td>${!x.done&&tut?`<button class="g" onclick="ed={k:'cum',i:${k}};msg='';render()">Confirmar cumplimiento</button>`:''}${est&&s.m===ctx?`<div class="row" style="margin:0"><input id="ap${k}" aria-label="Tu aporte" placeholder="Tu aporte"><button class="g" onclick="u(doAp(F('${s.m}'),${k},$('ap${k}').value),'Aporte enviado. El estado del acuerdo no cambia; lo confirma tu tutor.')">Aportar</button></div>`:''}</td></tr>`).join('')||'<tr><td colspan="4" class="mut">Sin acuerdos. Los acuerdos no se eliminan.</td></tr>'}</table>`;
+ if(ed&&ed.k==='cum'&&s.a[ed.i])h+=`<div class="card" style="margin:10px 0 0"><b>Confirmar cumplimiento: ${esc(s.a[ed.i].x)}</b><div class="row"><label style="flex:1">Evidencia breve (obligatoria)<input id="ce"></label><button onclick="u(doCum(F(sel),ed.i,$('ce').value),'Cumplimiento confirmado con fecha ${T}.')">Confirmar</button><button class="g" onclick="ed=null;render()">Cancelar</button></div></div>`;
+ h+='</div>';
+ if(tut)h+=`<div class="card"><h3>Registrar sesión</h3><div class="row"><label>Fecha<input type="date" id="sf" value="${T}"></label><label>Hora<input type="time" id="sh" value="10:00"></label><label>Resultado<select id="sr"><option>programada</option><option>asistió</option><option>no asistió</option><option>cancelada por el tutor</option><option>cancelada por el estudiante</option></select></label><label>Modalidad<select id="sm"><option>Presencial</option><option>Virtual</option></select></label><label>Tema<input id="st"></label><label>Observaciones (motivo si se cancela)<input id="so"></label><label>Aviso de cancelación (fecha)<input type="date" id="af" value="${T}"></label><label>Hora del aviso<input type="time" id="ah" value="09:00"></label><button onclick="uSes()">Guardar sesión</button></div>
+ <div class="row"><label>Próxima fecha de seguimiento<input type="date" id="ff" value="${s.f||''}"></label><button onclick="u(doF(F(sel),$('ff').value),'Fecha de seguimiento guardada.')">Guardar fecha</button></div>
+ <div class="row"><label>Nuevo acuerdo<input id="ax"></label><label>Fecha límite (obligatoria)<input type="date" id="al"></label><button onclick="u(doAcu(F(sel),$('ax').value,$('al').value),'Acuerdo registrado.')">Agregar acuerdo</button></div></div>`;
+ if(!est)h+=`<div class="card tw"><h3>Historial de asignaciones</h3><table><tr><th>Tutor</th><th>Inicio</th><th>Fin</th><th>Motivo</th><th>Asignó</th></tr>${s.hist.map(x=>`<tr><td>${tn(x.t)}</td><td>${x.ini}</td><td>${x.fin||'<span class="b o">activo</span>'}</td><td>${esc(x.mot)}</td><td>${esc(x.by)}</td></tr>`).join('')||'<tr><td colspan="5" class="mut">Sin asignaciones.</td></tr>'}</table></div>`;
+ if(role==='cc'&&s.c===ctx&&act(s)){const op=Object.entries(TUT).filter(([k,v])=>v[1]===s.c&&k!==s.t).map(([k,v])=>`<option value="${k}">${v[0]}</option>`).join('');
+  h+=`<div class="card"><h3>${s.t?'Cambiar tutor':'Asignar tutor'}</h3><p class="mut">Un solo tutor activo. Efecto inmediato con la fecha del día (${T}), que no se puede cambiar; el tutor anterior pierde acceso y sus registros conservan autoría.</p><div class="row"><label>Tutor<select id="nt">${op}</select></label><label>Motivo (obligatorio)<input id="mt"></label><button onclick="u(doAssign(F(sel),$('nt').value,$('mt').value),'Tutor asignado con fecha ${T}. El tutor anterior ya no tiene acceso.')">Guardar asignación</button></div></div>`}
+ return h+fm()}
+function u(err,ok){msg=err?'e'+err:'k'+ok;if(!err)ed=null;render();const e=document.querySelector('.msg');if(e)e.scrollIntoView({block:'nearest'})}
+function uSes(){u(doSes(F(sel),{f:$('sf').value,h:$('sh').value,r:$('sr').value,m:$('sm').value,tm:$('st').value,o:$('so').value,af:$('af').value,ah:$('ah').value}),'Sesión guardada.')}
+function uCorr(){u(doCorr(F(sel),ed.i,$('co').value,$('cj')?$('cj').value:''),'Corrección guardada en la bitácora con valores anteriores y nuevos.')}
+
+function errTable(E){return`<div class="tw"><table><tr><th>Fila</th><th>Campo</th><th>Motivo</th></tr>${E.map(e=>`<tr><td>${e[0]}</td><td>${e[1]}</td><td>${esc(e[2])}</td></tr>`).join('')}</table></div>`}
+function impView(){return`<div class="card"><h3>Paso 1 · Importar estudiantes · campus ${ctx}</h3><p class="mut">Todo o nada: con un solo error se rechaza el archivo completo. Un registro existente es error (sin sobrescritura). Formato: CSV UTF-8, coma como separador, punto decimal. Encabezados: <code>${HE}</code></p>
+<div class="row"><button class="g" onclick="$('csvE').value=BAD">Cargar estudiantes_oax_con_errores.csv</button><button class="g" onclick="$('csvE').value=OK">Cargar estudiantes_oax_corregido.csv</button></div>
+<textarea id="csvE" spellcheck="false" aria-label="Contenido CSV de estudiantes">${esc(impE?impE.txt:'')}</textarea><div class="row"><button onclick="uVal('E')">Validar archivo</button></div><p class="mut">Estudiantes registrados en ${ctx}: ${cntE(ctx)}</p>${impE?impE.html:''}</div>
+<div class="card"><h3>Paso 2 · Importar antecedentes · campus ${ctx}</h3><p class="mut">Se importan después de los estudiantes: un antecedente sin estudiante es error. Validaciones: promedio de 0 a 10 con punto decimal, materias enteras, cursadas ≥ 1, reprobadas entre 0 y cursadas. Encabezados: <code>${HA}</code></p>
+<div class="row"><button class="g" onclick="$('csvA').value=BADA">Cargar antecedentes_oax_con_errores.csv</button><button class="g" onclick="$('csvA').value=OKA">Cargar antecedentes_oax_corregido.csv</button></div>
+<textarea id="csvA" spellcheck="false" aria-label="Contenido CSV de antecedentes">${esc(impA?impA.txt:'')}</textarea><div class="row"><button onclick="uVal('A')">Validar archivo</button></div><p class="mut">Antecedentes registrados en ${ctx}: ${cntA(ctx)}</p>${impA?impA.html:''}</div>`}
+function uVal(k){const txt=$('csv'+k).value,cnt=k==='E'?cntE:cntA,n0=cnt(ctx),r=(k==='E'?validateStu:validateAnt)(txt,ctx),w=k==='E'?'estudiantes':'antecedentes';
+ const o=r.E.length?{txt,html:`<div class="msg e"><b>Archivo rechazado con ${r.E.length} errores.</b> No se incorporó ninguna fila. Total antes: ${n0}; total después del intento: ${cnt(ctx)}. Corrige las filas indicadas y vuelve a validar.</div>${errTable(r.E)}`}
+  :{txt,rows:r.rows,html:`<div class="msg k">Archivo válido: ${r.rows.length} ${w}. Total actual: ${n0}.</div><div class="row"><button onclick="uImp('${k}')">Confirmar e importar</button></div>`};
+ if(k==='E')impE=o;else impA=o;render()}
+function uImp(k){const o=k==='E'?impE:impA,n0=(k==='E'?cntE:cntA)(ctx);(k==='E'?importStu:importAnt)(o.rows);
+ const html=`<div class="msg k">Importados ${o.rows.length} ${k==='E'?'estudiantes':'antecedentes'} en una sola transacción. Total: ${n0} → ${(k==='E'?cntE:cntA)(ctx)}.${k==='E'?' Aparecen como pendientes de asignación en la pestaña Estudiantes.':''}</div>`;
+ if(k==='E')impE={txt:'',html};else impA={txt:'',html};render()}
+
+/* ---------- Reportes (RF-REP-01, 02) ---------- */
+function inPer(d,p){const end=p===CUR?NOW:PER[p][1]+'T23:59';return d>=PER[p][0]&&d<=end}
+function stats(c){const v=S.filter(s=>s.c===c&&act(s));return{act:v.length,con:v.filter(s=>s.t).length,sin:v.filter(pAsg).length,att:v.filter(s=>ev(s).att).length,inc:v.filter(s=>ev(s).inc).length,na:v.filter(s=>ev(s).na).length,prog:v.filter(pProg).length}}
+function actPer(list,p,tut){const ses=list.flatMap(s=>s.s).filter(x=>inPer(x.d,p)&&x.d<=NOW&&(!tut||x.a===tut));
+ const ac=list.flatMap(s=>s.a).filter(a=>(!tut||a.au===tut)&&a.lim>=PER[p][0]&&a.lim<=PER[p][1]&&a.lim<T);
+ return{ses:ses.length,as:ses.filter(x=>x.r==='asistió').length,na:ses.filter(x=>x.r==='no asistió').length,ca:ses.filter(x=>x.r.startsWith('cancel')).length,av:ac.length,cu:ac.filter(a=>a.done).length}}
+const perSel=()=>`<label>Periodo de actividad<select onchange="rp=this.value;render()">${P.map(p=>`<option ${p===rp?'selected':''}>${p}</option>`).join('')}</select></label>`;
+function rep(){if(role==='cn')return repNac();
+ const v=S.filter(x=>x.c===ctx&&act(x)),s=stats(ctx),vt=v.filter(x=>!rt||x.t===rt),a=actPer(S.filter(x=>x.c===ctx),rp,rt);
+ const tl=Object.entries(TUT).filter(([,x])=>x[1]===ctx);
+ const ls=(t,f,why)=>{const r=vt.filter(f);return`<h3>${t} (${r.length})</h3>${r.length?`<div class="tw"><table><tr><th>Matrícula</th><th>Estudiante</th><th>Tutor responsable</th><th>Detalle</th></tr>${r.map(x=>`<tr><td>${x.m}</td><td>${esc(x.n)}</td><td>${tn(x.t)}</td><td>${esc(why(x))}</td></tr>`).join('')}</table></div>`:'<p class="mut">Ninguno</p>'}`};
+ return`<div class="card"><div class="row" style="margin:0"><label>Tutor<select onchange="rt=this.value;render()"><option value="">Todos</option>${tl.map(([k,x])=>`<option value="${k}" ${k===rt?'selected':''}>${x[0]}</option>`).join('')}</select></label>${perSel()}</div><p class="mut">Listas operativas con nombre y matrícula (uso de la coordinación de campus). La «Situación actual» es a la fecha ${T}; la «Actividad del periodo» depende del periodo elegido.</p></div>
+ <div class="card"><h3>Situación actual · ${ctx} · ${T}</h3><div class="kp"><div><b>${s.act}</b>Activos</div><div><b>${s.con}</b>Con tutor</div><div><b>${s.sin}</b>Sin tutor</div><div><b>${s.att}</b>Requieren atención</div><div><b>${s.inc}</b>Evaluación incompleta</div><div><b>${s.na}</b>Aún no aplicable</div><div><b>${s.prog}</b>Pend. programación</div></div>
+ ${ls('Requieren atención',x=>ev(x).att,x=>ev(x).r.join('; '))}${ls('Información insuficiente',x=>ev(x).inc||ev(x).na,x=>ev(x).inc?'Evaluación incompleta: falta '+LC:'Evaluación académica aún no aplicable (nuevo ingreso)')}${rt?'':ls('Pendientes de asignación',pAsg,()=>'Activo sin tutor')}${ls('Pendientes de programación',pProg,x=>x.f?'Fecha de seguimiento vencida ('+x.f+')':'Sin sesión futura ni fecha de seguimiento')}</div>
+ <div class="card"><h3>Actividad del periodo ${rp}${rt?' · '+tn(rt):''}</h3><div class="kp"><div><b>${a.ses}</b>Sesiones ocurridas</div><div><b>${a.as}</b>Asistió</div><div><b>${a.na}</b>No asistió</div><div><b>${a.ca}</b>Canceladas (no cuentan como inasistencia)</div><div><b>${a.av}</b>Acuerdos vencidos</div><div><b>${a.cu}</b>Cumplidos de esos vencidos</div></div></div>`}
+function repNac(){const cs=rc?[rc]:CAMP,rows=cs.map(c=>[c,stats(c),actPer(S.filter(x=>x.c===c),rp,'')]);
+ const sum=i=>rows.reduce((a,r)=>{for(const k in r[i])a[k]=(a[k]||0)+r[i][k];return a},{});const T0=sum(1),T1=sum(2);
+ return`<div class="card"><div class="row" style="margin:0"><label>Campus<select onchange="rc=this.value;render()"><option value="">Toda la red</option>${CAMP.map(c=>`<option ${c===rc?'selected':''}>${c}</option>`).join('')}</select></label>${perSel()}</div><p class="mut">Cifras agregadas, sin nombres ni matrículas. Un estudiante con varios motivos cuenta una sola vez. La revisión individual está en «Consulta individual».</p></div>
+ <div class="card tw"><h3>Situación actual · ${T}</h3><table><tr><th>Campus</th><th>Activos</th><th>Con tutor</th><th>Sin tutor</th><th>Requieren atención</th><th>Evaluación incompleta</th><th>Aún no aplicable</th><th>Pend. programación</th></tr>${rows.map(([c,s])=>`<tr><td>${c}</td><td>${s.act}</td><td>${s.con}</td><td>${s.sin}</td><td>${s.att}</td><td>${s.inc}</td><td>${s.na}</td><td>${s.prog}</td></tr>`).join('')}<tr><th>${rc?'Total':'Red'}</th><th>${T0.act}</th><th>${T0.con}</th><th>${T0.sin}</th><th>${T0.att}</th><th>${T0.inc}</th><th>${T0.na}</th><th>${T0.prog}</th></tr></table></div>
+ <div class="card tw"><h3>Actividad del periodo ${rp}</h3><table><tr><th>Campus</th><th>Sesiones</th><th>Asistió</th><th>No asistió</th><th>Canceladas</th><th>Acuerdos vencidos</th><th>Cumplidos</th></tr>${rows.map(([c,,a])=>`<tr><td>${c}</td><td>${a.ses}</td><td>${a.as}</td><td>${a.na}</td><td>${a.ca}</td><td>${a.av}</td><td>${a.cu}</td></tr>`).join('')}<tr><th>${rc?'Total':'Red'}</th><th>${T1.ses}</th><th>${T1.as}</th><th>${T1.na}</th><th>${T1.ca}</th><th>${T1.av}</th><th>${T1.cu}</th></tr></table></div>`}
+function bit(){const l=role==='cc'?LOG.filter(x=>x.c===ctx||x.c==='*'):LOG;
+ return`<div class="card tw"><h3>Bitácora (solo inserción)${role==='cc'?' · '+ctx:' · toda la red'}</h3><table><tr><th>Fecha</th><th>Responsable</th><th>Campus</th><th>Acción</th><th>Autor original</th><th>Antes</th><th>Después</th><th>Motivo</th></tr>${l.map(x=>`<tr><td>${x.t}</td><td>${esc(x.w)}</td><td>${x.c==='*'?'Red':x.c}</td><td>${esc(x.x)}</td><td>${esc(x.orig)}</td><td>${esc(x.antes)}</td><td>${esc(x.desp)}</td><td>${esc(x.mot)}</td></tr>`).join('')}</table></div>`}
+
+/* ---------- Verificación automática de CA-01 a CA-15 ---------- */
+function runCA(){const keep={S:JSON.stringify(S),L:JSON.stringify(LOG),role,ctx,sel,ed},R=[];
+ const ok=(id,caso,esp,obt,pass)=>R.push({id,caso,esp,obt,pass:!!pass});
+ try{S=JSON.parse(INIT);LOG=[];sel=null;ed=null;
+  role='cc';ctx='OAX';
+  let n0=cntE('OAX'),v=validateStu(BAD,'OAX');
+  ok('CA-01','Validar estudiantes_oax_con_errores.csv','Rechazado con 7 errores (fila, campo, motivo); total sin cambio',`${v.E.length} errores en filas ${[...new Set(v.E.map(e=>e[0]))].join(', ')}; total ${n0} → ${cntE('OAX')}`,v.E.length===7&&cntE('OAX')===n0&&v.E.every(e=>e[0]&&e[1]&&e[2]));
+  v=validateStu(OK,'OAX');if(!v.E.length)importStu(v.rows);const nv=['00260105','00260108','00260109','00260110'].map(F);
+  ok('CA-02','Importar estudiantes_oax_corregido.csv','4 estudiantes como pendientes de asignación; matrícula 00260105 conserva ceros',`${nv.filter(x=>x&&pAsg(x)).length} pendientes de asignación; matrícula «${F('00260105')?.m}»`,!v.E.length&&nv.every(x=>x&&pAsg(x))&&F('00260105').m==='00260105');
+  n0=cntA('OAX');v=validateAnt(BADA,'OAX');
+  ok('CA-03','Validar antecedentes_oax_con_errores.csv','Rechazado con 7 errores; ninguna fila incorporada',`${v.E.length} errores; antecedentes ${n0} → ${cntA('OAX')}`,v.E.length===7&&cntA('OAX')===n0);
+  v=validateAnt(OKA,'OAX');if(!v.E.length)importAnt(v.rows);const mg=F('00260107');
+  ok('CA-04','Importar antecedentes_oax_corregido.csv','Mario Gil Reyes con evaluación incompleta (falta 2026-1)',`${v.E.length?'rechazado':v.rows.length+' antecedentes importados'}; Mario: ${ev(mg).inc?'evaluación incompleta':'otra situación'}`,!v.E.length&&ev(mg).inc&&!mg.h[LC]);
+  const c=F('00260101');let er=doAssign(c,'t1','Reequilibrio de carga del tutor');const h=c.hist[c.hist.length-1],lg=LOG.find(x=>x.x.includes('tutor de Carla'));
+  ok('CA-05','Cambiar tutor de Carla Jiménez Ríos (Raúl Mendoza → Lucía Herrera)','Asignación con fecha del día y motivo en bitácora',`inicio ${h.ini}; bitácora: «${lg?.mot}»; asignaciones activas: ${c.hist.filter(x=>!x.fin).length}`,!er&&h.ini===T&&lg&&lg.mot==='Reequilibrio de carga del tutor'&&c.hist.filter(x=>!x.fin).length===1);
+  role='tut';ctx='t2';const inL=vis().some(x=>x.m==='00260101'),e6=exp('00260101');
+  ok('CA-06','Entrar como tutor anterior (Raúl Mendoza)','Carla no aparece; expediente muestra «Sin acceso»',`en su lista: ${inL?'sí':'no'}; expediente: ${/Sin acceso/.test(e6)?'«Sin acceso»':'visible'}`,!inL&&/Sin acceso/.test(e6)&&!e6.includes('Buen avance'));
+  ctx='t1';const old=c.s.findIndex(x=>x.a==='t2'),e7=exp('00260101');
+  ok('CA-07','Entrar como nueva tutora (Lucía Herrera)','Ve historial con autor original; no puede editarlo',`ve sesión de ${tn(c.s[old].a)}; puede corregirla: ${canCorr(c,c.s[old])?'sí':'no'}`,vis().some(x=>x.m==='00260101')&&e7.includes('Raúl Mendoza')&&e7.includes('Buen avance')&&!canCorr(c,c.s[old])&&doCorr(c,old,'x','')!=='');
+  er=doSes(c,{f:'2026-10-30',h:'10:00',r:'asistió',m:'Presencial',tm:'Primera sesión con nueva tutora',o:'',af:'',ah:''});const nw=c.s.findIndex(x=>x.a==='t1');
+  role='cc';ctx='OAX';const sinJ=doCorr(c,old,'Buen avance (corregido)',''),conJ=doCorr(c,old,'Buen avance (corregido)','Dato capturado incompleto'),act8=doCorr(c,nw,'cambio','intento');const lc=LOG[0];
+  ok('CA-08','Coordinación OAX abre el expediente de Carla','Corrige registros del tutor anterior con justificación; no los de la tutora actual',`sin justificación: rechazado; con justificación: ${conJ?'rechazado':'guardado'} (autor original ${lc.orig}); registro de la tutora actual: ${act8?'bloqueado':'editable'}`,!er&&sinJ&&!conJ&&lc.orig==='Raúl Mendoza'&&lc.antes==='Buen avance'&&act8);
+  const g=ev(F('00260102'));
+  ok('CA-09','Gabriela Ramos Torres (ingreso 2026-2)','Evaluación académica aún no aplicable',g.na?'Evaluación académica aún no aplicable':g.inc?'Evaluación incompleta':'Evaluada',g.na&&!g.inc);
+  const dg=F('00260103'),di=ind(dg);
+  ok('CA-10','Diego Morales Sánchez (sin 2026-1)','Evaluación incompleta; evolución compara 2025-1 y 2025-2 indicándolos',`${ev(dg).inc?'Evaluación incompleta':'—'}; evolución: ${di.prom}`,ev(dg).inc&&di.prom.startsWith('2025-1 → 2025-2'));
+  role='tut';ctx='t1';const n11=dg.s.length;er=doSes(dg,{f:'2026-10-20',h:'10:00',r:'cancelada por el estudiante',m:'Presencial',tm:'Seguimiento',o:'Avisó tarde',af:'2026-10-20',ah:'11:00'});
+  ok('CA-11','Cancelada por el estudiante con aviso posterior al inicio','Se rechaza e indica registrar «no asistió»',`${er||'aceptada'}; sesiones ${n11} → ${dg.s.length}`,/no asistió/.test(er)&&dg.s.length===n11);
+  const hc=F('00260104');
+  ok('CA-12','Héctor López Medina, fecha de seguimiento vencida','Pendiente de programación con fecha vencida',`${pProg(hc)?'Pendiente de programación':'—'}; fecha ${hc.f}`,pProg(hc)&&hc.f<T);
+  const mi=ind(mg),fut=mg.a.filter(a=>a.done&&a.lim>=T).length;
+  ok('CA-13','Mario Gil Reyes: acuerdo cumplido que aún no vence','No entra en numerador ni denominador',`acuerdos cumplidos no vencidos: ${fut}; cumplimiento: ${mi.cu}`,fut>=1&&mi.cu==='0 de 1 vencidos');
+  role='cn';const rn=repNac(),leak=S.filter(x=>rn.includes(x.n)||rn.includes(x.m)).length,sf=ev(F('00260120')),distinct=CAMP.reduce((n,cp)=>n+stats(cp).att,0),real=S.filter(x=>ev(x).att).length;
+  ok('CA-14','Resumen nacional','Sin nombres ni matrículas; varios motivos cuentan una vez',`identificadores en el resumen: ${leak}; Sofía tiene ${sf.r.length} motivos; requieren atención en la red: ${distinct} (estudiantes distintos: ${real})`,leak===0&&sf.r.length>=2&&distinct===real);
+  const pa=ev(F('00260106'));
+  ok('CA-15','Paula Ortega Ruiz (ingreso 2026-1, sin antecedente 2026-1)','Evaluación incompleta (RN-06)',pa.inc?'Evaluación incompleta':pa.na?'Aún no aplicable':'Evaluada',pa.inc&&!pa.na);
+ }catch(x){R.push({id:'ERROR',caso:'Ejecución',esp:'Sin excepciones',obt:String(x),pass:false})}
+ finally{S=JSON.parse(keep.S);LOG=JSON.parse(keep.L);role=keep.role;ctx=keep.ctx;sel=keep.sel;ed=keep.ed}
+ return R}
+function verView(){const R=runCA(),n=R.filter(r=>r.pass).length;
+ return`<div class="card"><h3>Verificación automática de criterios de aceptación</h3><p>Resultado: <b id="ca-res" data-pass="${n}" data-total="${R.length}">${n} de ${R.length} criterios cumplidos</b></p><p class="mut">Cada caso se ejecuta sobre una copia de los datos de demostración iniciales con la fecha de prueba ${T} y las mismas funciones que usa la interfaz. No modifica lo que hayas hecho en esta sesión. Los CA son de redacción del equipo (SRS, sección 10).</p><div class="row"><button class="g" onclick="render()">Ejecutar de nuevo</button></div></div>
+ <div class="card tw"><table id="ca"><tr><th>CA</th><th>Caso</th><th>Resultado esperado</th><th>Resultado obtenido</th><th>Estado</th></tr>${R.map(r=>`<tr data-ca="${r.id}" data-pass="${r.pass}"><td>${r.id}</td><td>${esc(r.caso)}</td><td>${esc(r.esp)}</td><td>${esc(r.obt)}</td><td>${r.pass?'<span class="b o">Cumple</span>':'<span class="b r">No cumple</span>'}</td></tr>`).join('')}</table></div>`}
+
+/* ---------- Supuestos (SRS §3, Minuta §4) ---------- */
+const SUP=[['A','Periodo de referencia: último periodo concluido de la red; si falta, información incompleta sin usar uno anterior. La evolución usa los dos últimos concluidos y consecutivos.','Aprobado con precisión: mostrar qué periodos se comparan'],
+['B','Catálogo 2025-1 a 2026-2; fecha de prueba 3 nov 2026.','Aprobado; la app final calcula con la fecha vigente'],
+['C','Estados ACTIVO, BAJA y EGRESADO; solo ACTIVO en pendientes.','Aprobado'],
+['D','Pendiente de programación: sin sesión futura ni fecha de seguimiento vigente.','Aprobado; una fecha vencida regresa a pendiente'],
+['E','Resultado «cancelada por el estudiante».','Modificado: con aviso previo se excluye de asistencia; sin aviso es inasistencia; solo el tutor la registra'],
+['F','Nuevo ingreso sin antecedentes.','Modificado: «evaluación académica aún no aplicable», distinta de incompleta; puede requerir atención'],
+['G','Vista del tutor: lista de asignados sin reporte de campus.','Aprobado; sin tablero adicional'],
+['H','Registro existente en importación: error y rechazo del archivo completo.','Aprobado'],
+['I','Stack NestJS, PostgreSQL 16 (node-postgres), React, Docker Compose; cuentas de prueba.','Aceptado como orientación; se comprobará en la solución con servidor']];
+const DEC=[['Prototipo v3','El tutor que abre por matrícula a un estudiante sin asignación activa ve «Sin acceso», exista o no la matrícula, para no revelar datos.','CA-06; protección de datos'],
+['Prototipo v3','La corrección de sesiones aplica a las observaciones; la bitácora guarda autor original, responsable, antes, después y motivo.','RF-AUD-01 a 03'],
+['Prototipo v3','Fechas de periodo propuestas: 2025-1 feb–jul 2025, 2025-2 ago 2025–ene 2026, 2026-1 feb–jul 2026, 2026-2 ago 2026–ene 2027.','Supuesto B']];
+function supView(){return`<div class="card tw"><h3>Supuestos adoptados por decisión ejecutiva</h3><p class="mut">Estado común: <b>pendiente de confirmación explícita del cliente por escrito</b> (Minuta, sección 8). Cualquier cambio se atiende mediante control de cambios.</p><table><tr><th>Punto</th><th>Supuesto del equipo</th><th>Decisión del cliente (minuta 3 nov 2026)</th><th>Estado</th></tr>${SUP.map(r=>`<tr><td>${r[0]}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td><td><span class="b w">Pendiente de confirmación por escrito</span></td></tr>`).join('')}</table></div>
+<div class="card tw"><h3>Decisiones de detalle del prototipo</h3><p class="mut">No amplían el alcance; se someten a validación del cliente en la siguiente revisión.</p><table><tr><th>Origen</th><th>Decisión</th><th>Requisito relacionado</th></tr>${DEC.map(r=>`<tr><td>${r[0]}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td></tr>`).join('')}</table></div>`}
+
+ctxOpts();
+if(location.hash==='#verificacion')view=tabs().indexOf('Verificación');
+render();
+</script>
+</body>
+</html>
